@@ -3,316 +3,146 @@ const width = 800 - margin.left - margin.right;
 const height = 600 - margin.top - margin.bottom;
 
 let allData = [];
-let xVar = 'income';
-let yVar = 'lifeExp';
-let sizeVar = 'population';
-let targetYear = 2005;
+let options = ['ALL', 'STREET', 'APARTMENT', 'PARKING LOT'];
+let selected = 'STREET';
+let xScalebar, yScalebar;
+let xScaleline, yScaleline;
 
-let xScale, yScale, sizeScale;
-
-const continents = ['Africa', 'Asia', 'Oceania', 'Americas', 'Europe'];
-const colorScale = d3.scaleOrdinal(continents, d3.schemeSet2);
-
-const options = ['income', 'lifeExp', 'gdp', 'population', 'childDeaths'];
-
-
-// Create SVG
-const svg = d3.select('#vis')
+const svgBar = d3.select('#visBar')
     .append('svg')
     .attr('width', width + margin.left + margin.right)
     .attr('height', height + margin.top + margin.bottom)
     .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`);
+    .attr('transform', `translate(${margin.left},${margin.top})`)
 
+const svgLine = d3.select('#visLine')
+    .append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g')
+    .attr('transform', `translate(${margin.left},${margin.top})`)
 
-// Load data
+    
 function init() {
 
-    d3.csv("./data/gapminder_subset.csv", (d) => {
+    d3.csv("Crime_2020-2026.csv", (d) => {
         return {
-            country: d.country,
-            continent: d.continent,
-            year: +d.year,
-            lifeExp: +d.life_expectancy,
-            income: +d.income_per_person,
-            gdp: +d.gdp_per_capita,
-            childDeaths: +d.number_of_child_deaths,
-            population: +d.population
+            primaryType: d["Primary Type"],
+            location: d["Location Description"],
+            count: 1 // tempoerary 
         };
     })
+        .then(data => {
+            allData = data;
 
-    .then(data => {
+            xScalebar = d3.scaleBand()
+                .range([0, width]) // add domains
+                .padding(0.2)
 
-        console.log(data);
+            yScalebar = d3.scaleLinear() // add domains
+                .range([height, 0])
 
-        allData = data;
+            xScaleline = d3.scaleLinear()
+                .range([0, width]) // add domains
 
-        // Create scales AFTER data has loaded
-        xScale = d3.scaleLinear()
-            .domain([0, d3.max(allData, d => d[xVar])])
-            .range([0, width]);
+            yScaleline = d3.scaleLinear() // add domains
+                .range([height, 0]);
 
-        yScale = d3.scaleLinear()
-            .domain([0, d3.max(allData, d => d[yVar])])
-            .range([height, 0]);
+            svgBar.append('text')
+                .attr('class', 'axis-label')
+                .attr('x', width / 2)
+                .attr('y', height + margin.bottom - 4)
+                .style('text-anchor', 'middle')
+                .text('Primary Type');
 
-        sizeScale = d3.scaleSqrt()
-            .domain([0, d3.max(allData, d => d[sizeVar])])
-            .range([2, 40]);
+            svgBar.append('text')
+                .attr('class', 'axis-label')
+                .attr('transform', 'rotate(-90)')
+                .attr('x', -height / 2)
+                .attr('y', -margin.left + 15)
+                .style('text-anchor', 'middle')
+                .text('Number of crimes');
 
-        setupSelector();
+            svgLine.append('text')
+                .attr('class', 'axis-label')
+                .attr('x', width / 2)
+                .attr('y', height + margin.bottom - 4)
+                .style('text-anchor', 'middle')
+                .text('Year');
 
-        updateAxes();
-        updateVis();
-        addLegend();
-
-    })
-
-    .catch(error => console.error('Error loading data:', error));
+            svgLine.append('text')
+                .attr('class', 'axis-label')
+                .attr('transform', 'rotate(-90)')
+                .attr('x', -height / 2)
+                .attr('y', -margin.left + 15)
+                .style('text-anchor', 'middle')
+                .text('Number of crimes');
+            
+            setupSelector();
+            updateVisBar();
+            updateVisLine();
+        })
+        .catch(error => console.error('Error loading data:', error));
 }
 
-
 function setupSelector() {
-
-    var slider = d3
-        .sliderHorizontal()
-        .min(d3.min(allData, d => d.year))
-        .max(d3.max(allData, d => d.year))
-        .step(1)
-        .width(300)
-        .displayValue(false)
-        .on('onchange', (val) => {
-
-            targetYear = +val;
-
-            d3.select('#value')
-                .text(targetYear);
-
-            updateVis();
-        });
-
-    d3.select('#slider')
-        .append('svg')
-        .attr('width', 500)
-        .attr('height', 100)
-        .append('g')
-        .attr('transform', 'translate(30,30)')
-        .call(slider);
-
-    d3.select('#value')
-        .text(targetYear);
-
-
-    d3.selectAll('.variable')
-        .each(function() {
-
-            d3.select(this)
-                .selectAll('myOptions')
+    d3.selectAll('#locationVar')
+        .each(function () {
+            d3.select(this).selectAll('myOptions')
                 .data(options)
                 .enter()
                 .append('option')
-                .text(d => {
-                    switch (d) {
-                        case 'income':
-                            return 'Income per Person';
-                        case 'lifeExp':
-                            return 'Life Expectancy';
-                        case 'gdp':
-                            return 'GDP per Capita';
-                        case 'population':
-                            return 'Population';
-                        case 'childDeaths':
-                            return 'Child Deaths';
-                    }
-                })
-                .attr("value", d => d)
+                .text(d => d) // The displayed text
+                .attr("value", d => d) // The actual value used in the code
         })
-
-        .on("change", function(event) {
-
-            console.log(d3.select(this).property("id"));
-            console.log(d3.select(this).property("value"));
-
-            switch (d3.select(this).property("id")) {
-
-                case 'xVariable':
-                    xVar = d3.select(this).property("value");
-                    break;
-
-                case 'yVariable':
-                    yVar = d3.select(this).property("value");
-                    break;
-
-                case 'sizeVariable':
-                    sizeVar = d3.select(this).property("value");
-                    break;
-            }
-
-            // Update scale domains
-            xScale.domain([
-                0,
-                d3.max(allData, d => d[xVar])
-            ]);
-
-            yScale.domain([
-                0,
-                d3.max(allData, d => d[yVar])
-            ]);
-
-            sizeScale.domain([
-                0,
-                d3.max(allData, d => d[sizeVar])
-            ]);
-
-            updateAxes();
-            updateVis();
-        });
-
-
-    d3.select('#xVariable').property('value', xVar);
-    d3.select('#yVariable').property('value', yVar);
-    d3.select('#sizeVariable').property('value', sizeVar);
+        .on("change", function (event) {
+            selected = d3.select(this).property("value");
+            updateVisBar();
+            updateVisLine();
+        })
 }
 
+function updateVisBar() {
 
-function updateAxes() {
+    let currentData = allData;
 
-    // Remove old axes and labels preventing duplicates when variables change
-    svg.selectAll('.axis').remove();
-    svg.selectAll('.labels').remove();
+    if (selected !== 'ALL') {
+        currentData = allData.filter(d => d.location === selected);
+    }
 
+    svgBar.selectAll('rect').remove();
+    svgBar.selectAll('.x-axis').remove();
+    svgBar.selectAll('.y-axis').remove();
 
-    // X axis
-    const xAxis = d3.axisBottom(xScale);
-
-    svg.append('g')
-        .attr('transform', `translate(0,${height})`)
-        .attr('class', 'axis')
-        .call(xAxis);
-
-
-    // X-axis label
-    svg.append("text")
-        .attr("x", width / 2)
-        .attr("y", height + margin.bottom - 20)
-        .attr("text-anchor", "middle")
-        .text(xVar)
-        .attr('class', 'labels');
-
-
-    // Y axis
-    const yAxis = d3.axisLeft(yScale);
-
-    svg.append('g')
-        .attr('class', 'axis')
-        .call(yAxis);
-
-
-    // Y-axis label
-    svg.append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("x", -height / 2)
-        .attr("y", -margin.left + 40)
-        .attr("text-anchor", "middle")
-        .text(yVar)
-        .attr('class', 'labels');
-}
-
-
-function updateVis() {
-
-    // Filter data for the current year
-    let currentData = allData.filter(d => d.year === targetYear);
-
-
-    svg.selectAll('.points')
-        .data(currentData, d => d.country)
-        .join(
-            function(enter) {
-                return enter
-                    .append('circle')
-                    .attr('class', 'points')
-                    .attr('cx', d => xScale(d[xVar]))
-                    .attr('cy', d => yScale(d[yVar]))
-                    .attr('r', d => sizeScale(d[sizeVar]))
-                    .style('fill', d => colorScale(d.continent))
-                    .style('opacity', .5)
-
-                    // TOOLTIP
-                    .on('mouseover', function(event, d) {
-
-                        d3.select('#tooltip')
-                            .style('display', 'block')
-                            .html(`
-                                <strong>${d.country}</strong><br>
-                                Continent: ${d.continent}<br>
-                            `);
-
-                    })
-                    .on('mousemove', function(event) {
-
-                        d3.select('#tooltip')
-                            .style('left', (event.pageX + 10) + 'px')
-                            .style('top', (event.pageY + 10) + 'px');
-
-                    })
-                    .on('mouseout', function() {
-
-                        d3.select('#tooltip')
-                            .style('display', 'none');
-
-                    });
-            },
-
-            function(update) {
-
-                return update
-                    .transition()
-                    .duration(500)
-                    .attr('cx', d => xScale(d[xVar]))
-                    .attr('cy', d => yScale(d[yVar]))
-                    .attr('r', d => sizeScale(d[sizeVar]));
-            },
-
-
-
-            function(exit) {
-
-                return exit
-                    .transition()
-                    .duration(500)
-                    .style('opacity', 0)
-                    .remove();
-
-            }
-        );
-}
-
-function addLegend() {
-    let size = 10;
-
-    // Draw the colored squares
-    svg.selectAll('continentSquare')
-        .data(continents)
+    svgBar.selectAll('rect')
+        .data(currentData)
         .enter()
         .append('rect')
-        .attr('y', -margin.top / 2)
-        .attr('x', (d, i) => i * (size + 100) + 100)
-        .attr('width', size)
-        .attr('height', size)
-        .style('fill', d => colorScale(d));
+        .attr('class', 'bar')
+        .attr('x', (d, i) => xScalebar(d.primaryType))
+        .attr('y', d => yScalebar(d.count))  /// need count variable
+        .attr('width', xScalebar.bandwidth())
+        .attr('height', d => height - yScalebar(d.count))
+        .style('fill', 'steelblue')
+        .style("stroke-width", 2)
+        .style("stroke", "black")
 
-    // Add the continent names
-    svg.selectAll('continentName')
-        .data(continents)
-        .enter()
-        .append('text')
-        .attr('y', -margin.top / 2 + size)
-        .attr('x', (d, i) => i * (size + 100) + 120)
-        .style('fill', d => colorScale(d))
-        .text(d => d)
-        .attr('text-anchor', 'left')
-        .style('font-size', '13px');
+    const xAxis = d3.axisBottom(xScalebar);
+
+    svgBar.append('g')
+        .attr('class', 'x-axis')
+        .attr('transform', `translate(0,${height})`)
+        .call(xAxis)
+
+    const yAxis = d3.axisLeft(yScalebar);
+
+    svgBar.append('g')
+        .attr('class', 'y-axis')
+        .call(yAxis);
+}
+
+function updateVisLine() { 
+
 }
 
 window.addEventListener('load', init);
