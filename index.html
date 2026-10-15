@@ -3,28 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Labs 4 & 5: Interactive Visualization with D3.js</title>
+    <title>Assignment1</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <h1>Labs 4 & 5: Interactive Visualization with D3.js</h1>
-    <p id="value"></p>
-    <div id="slider"></div>
+    <h1>Assignment 1</h1>
     <div class="controls">
-       X:<select id="xVariable" class="variable"></select>
-        Y:<select id="yVariable" class="variable"></select>
-        Size:<select id="sizeVariable" class="variable"></select>
+       location:<select id="locationVar" class="variable"></select>
     </div>
 
-    <div id="tooltip" style="display:none"></div>
-    <div id="vis">
+    <div id="visBar">
+    </div> <!--  Will hold our visualization (SVG) -->
 
-
+    <div id="visLine">
     </div> <!--  Will hold our visualization (SVG) -->
 
     <!-- Load D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://unpkg.com/d3-simple-slider"></script>
     <script src="js/script.js"></script>
 </body>
 </html>
