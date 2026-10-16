@@ -29,7 +29,7 @@ const svgLine = d3.select('#visLine')
 
 
 function init() {
-    d3.csv("data/Crime_2020-2026.csv", (d) => {
+    d3.csv("https://huggingface.co/datasets/aajello/ChicagoCrimeData/resolve/main/Crime_2020-2026.csv?download=true", (d) => {
         return {
             year: +d.Year,
             month: +d.Month,
