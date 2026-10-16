@@ -25,6 +25,76 @@
 
     <div id="tooltip"></div>
 
+    <div id = "writeup">
+        <p> 
+            For Assignment 1, we used the Chicago crime dataset but created a subset to only look at the years 2020 to 2026.
+            We decided to only look at the variables crime type, year, location, and arrest rate (%). We made the 
+            subset and calculated the arrest rate by using python and the pandas module. The goal of our visualization 
+            was to let the users explore how the number of reported crimes varies by crime type, year (quarterly), and 
+            location (street, apartment, etc.).
+        </p>
+
+        <p> 
+            We created two charts for this assignment. The first chart is a bar chart that shows the number of reported 
+            crimes by the top 10 crime types. The number of crimes committed is on the x-axis and crime type is on the 
+            y-axis so the user can easily compare the different crime types. The second chart is a line chart to show 
+            the number of reported crimes over time (years/quarters). We decided to use a line chart because it makes it 
+            easy for the user to see trends over time. We put the number of crimes committed on the y-axis and years/quarters 
+            on the x-axis so the user can compare how it changes over the years. On the line chart, there is a clear
+            drop off for 2026 as we are still in Q3 of that year. We considered doing a map instead but decided that the 
+            bar and line charts make it easier for the user to compare crime types and explore changes 
+            over the years. 
+        </p>
+
+        <p> 
+            We created a dropdown so the user can filter by location for both of the charts. The user can choose streets, 
+            apartments, residence, sidewalk, parking lot / garage (non residential) or all locations. We also implemented 
+            brushing and linking that lets the user brush over a range of years on the line chart to update the bar chart 
+            to show data for only that time period. Also, when the user hovers over one of the bars a tooltip displays the 
+            arrest rate and other summary data for that crime type. The bar is also highlighted when the user is hovering 
+            over it to make it easy for the user to tell which bar they are looking at. These allow the users to explore 
+            the data and get more information without overcrowding the charts. 
+        </p>
+
+        <p> 
+            We spent around 2 hours discussing ideas and planning the graphs we wanted to make. Then, we divided the work 
+            but still communicated throughout the process to make sure no one was having too much difficulty. Jeremy worked 
+            on getting the CSV file and creating a subset of it while Ashley created the initial project structure. These 
+            tasks each took about an hour. Then, Jeremy worked on developing the bar chart and Ashley worked on developing 
+            the line chart. These each took about 2 hours. Then, we worked together on brushing and linking which took about 
+            an hour. We worked together to write the writeup and deploy the website which took about a hour. Ashley and 
+            Jeremy each took about 7 hours while 4 hours overlapped as we worked on brainstorming and implementing brushing 
+            and linking together. 
+        </p>
+
+        <p> 
+            We got the data from 
+            <a href ="https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-Present/ijzp-q8t2/about_data" >Chicago Crimes 2001 to Present</a>. 
+            We used D3 documentation from <a href = "https://d3js.org/">d3.js.org</a> and used code from the class labs to do this assignment. 
+            We also used code from <a href = "https://observablehq.com/@d3/focus-context">observablehq.com/@d3/focus-context</a> for 
+            implementing the brushing and linking. 
+            We also used code from <a href = "https://d3og.com/newsummit/7fdff19b0db01b69414c60c2ac91e0c5/">d3og.com</a>
+            to implement the angles axis labels.
+        </p>
+
+        <p> 
+            The most difficult parts of this assignment were figuring out what we wanted to visualize and implementing 
+            the brushing and linking. We had a lot of success because we were able to communicate a lot throughout this 
+            process. We also did a good job brainstorming and planning what we wanted to do. Since we had a good roadmap 
+            of what we wanted to do in this assignment, it was easy for us to work separately and then combine our work. 
+        </p>
+
+        <p> 
+            We used AI for help with brainstorming our ideas, specifically for help in trying to figure out which graphs 
+            would be best to visualize. We gave it our ideas and it gave us feedback to help us figure out which work best 
+            so the user is able to explore how the number of reported crimes vary by crime type, year (quarterly), and location. 
+        </p>
+
+    </div>
+
+
+
+
     <!-- Load D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="js/script.js"></script>

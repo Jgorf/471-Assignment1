@@ -109,3 +109,8 @@ h1 {
 .bar {
     cursor: pointer;
 }
+
+#writeup {
+    font-size: 14px; 
+    padding: 3rem; 
+}
