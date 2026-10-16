@@ -1,9 +1,8 @@
 /* Reset default styles */
 * {
     font-family: Arial, sans-serif;
-    max-width: 800px;
-    margin: 0px auto;
     line-height: 1.8;
+    box-sizing: border-box;
 }
 
 /* Container styling for layout */
@@ -36,6 +35,46 @@
 .axis-label {
     font-size: 14px;
     font-weight: bold;
+}
+
+#tooltip {
+    position: absolute;
+    display: none;
+    background: white;
+    border: 1px solid #999;
+    padding: 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    font-size: 12px;
+}
+
+body {
+    width: 95%;
+    max-width: 1500px;
+    margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+}
+
+#container {
+    display: flex;
+    width: 100%;
+    margin: 0 auto;
+    flex-direction: row;
+    justify-content: center;
+}
+
+#visBar,
+#visLine {
+    flex: 1;
+}
+
+#visBar h2,
+#visLine h2 {
+    text-align: center;
+    font-size: 18px;
 }
 
 #tooltip {

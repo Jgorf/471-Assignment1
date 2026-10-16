@@ -8,15 +8,22 @@
 </head>
 <body>
     <h1>Assignment 1</h1>
+
     <div class="controls">
-       location:<select id="locationVar" class="variable"></select>
+       Location:<select id="locationVar" class="variable"></select>
     </div>
 
-    <div id="visBar">
-    </div> <!--  Will hold our visualization (SVG) -->
+    <div id="container">
+        <div id="visBar">
+            <h2>Reported Crimes by Crime Type</h2>
+        </div>
+        
+        <div id="visLine">
+            <h2>Reported Crimes Over Time</h2>
+        </div>
+    </div>
 
-    <div id="visLine">
-    </div> <!--  Will hold our visualization (SVG) -->
+    <div id="tooltip"></div>
 
     <!-- Load D3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>

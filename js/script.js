@@ -1,7 +1,6 @@
-const margin = { top: 80, right: 60, bottom: 60, left: 100 };
+const margin = { top: 80, right: 60, bottom: 60, left: 200 };
 const width = 800 - margin.left - margin.right;
-const height = 600 - margin.top - margin.bottom;
-
+const height = 900 - margin.top - margin.bottom;
 let allData = [];
 let options = ['ALL', 'STREET', 'APARTMENT', 'ALLEY'];
 let selected = 'ALL';
@@ -28,9 +27,13 @@ function init() {
     d3.csv("Crime_2020-2026.csv", (d) => {
         return {
             year: +d.Year,
-            primaryType: d["Crime Type"],
+            month: +d.Month,
+            day: +d.Day,
+            time: d.Time,
+            crimeType: d["Crime Type"],
             location: d.Location,
-            count: 1 // tempoerary 
+            arrestRate: d["Arrest Rate"],
+            count: 1 
         };
     })
         .then(data => {
@@ -42,7 +45,7 @@ function init() {
                 .attr('x', width / 2)
                 .attr('y', height + margin.bottom - 4)
                 .style('text-anchor', 'middle')
-                .text('Crime Type');
+                .text('Number of crimes');
 
             svgBar.append('text')
                 .attr('class', 'axis-label')
@@ -50,7 +53,7 @@ function init() {
                 .attr('x', -height / 2)
                 .attr('y', -margin.left + 15)
                 .style('text-anchor', 'middle')
-                .text('Number of crimes');
+                .text('Crime Type');
 
             svgLine.append('text')
                 .attr('class', 'axis-label')
@@ -74,59 +77,145 @@ function init() {
         .catch(error => console.error('Error loading data:', error));
 }
 
+
 function setupSelector() {
-    d3.selectAll('#locationVar')
-        .each(function () {
-            d3.select(this).selectAll('myOptions')
-                .data(options)
-                .enter()
-                .append('option')
-                .text(d => d) // The displayed text
-                .attr("value", d => d) // The actual value used in the code
-        })
-        .on("change", function (event) {
-            selected = d3.select(this).property("value");
+    options = [
+        'ALL',
+        'STREET',
+        'APARTMENT',
+        'RESIDENCE',
+        'SIDEWALK',
+        'PARKING LOT / GARAGE (NON RESIDENTIAL)'
+    ];
+
+    d3.select('#locationVar')
+        .selectAll('option')
+        .data(options)
+        .enter()
+        .append('option')
+        .text(d => d)
+        .attr('value', d => d);
+
+    d3.select('#locationVar')
+        .on('change', function () {
+            selected = d3.select(this).property('value');
             updateVisBar();
             updateVisLine();
-        })
+        });
 }
 
 function updateVisBar() {
+    
+    let currentData = allData;
+    
+    if (selected !== 'ALL') {
+        currentData = allData.filter(d => d.location === selected);
+    }
+    
+    // count number of crime records per crime type
+    let countedData = [];
 
-    // let currentData = allData;
-    // if (selected !== 'ALL') {
-    //     currentData = allData.filter(d => d.location === selected);
-    // }
+    currentData.forEach(d => {
+        let there = false;
 
-    // svgBar.selectAll('rect').remove();
-    // svgBar.selectAll('.x-axis').remove();
-    // svgBar.selectAll('.y-axis').remove();
+        for (let i = 0; i < countedData.length; i++) {
+            if (countedData[i].crimeType === d.crimeType) {
+                countedData[i].count++;
+                there = true;
+                break;
+            }
+        }
+        
+        if (!there) {
+            countedData.push({
+                crimeType: d.crimeType,
+                count: 1,
+                arrestRate: +(Number(d.arrestRate).toFixed(2))
+            });
+        }
+    });
+    
+    // Sort from most to fewest incidents
+    countedData.sort((a, b) => b.count - a.count);
 
-    // svgBar.selectAll('rect')
-    //     .data(currentData)
-    //     .enter()
-    //     .append('rect')
-    //     .attr('class', 'bar')
-    //     .attr('x', (d, i) => xScalebar(d.primaryType))
-    //     .attr('y', d => yScalebar(d.count))  /// need count variable
-    //     .attr('width', xScalebar.bandwidth())
-    //     .attr('height', d => height - yScalebar(d.count))
-    //     .style('fill', 'steelblue')
-    //     .style("stroke-width", 2)
-    //     .style("stroke", "black")
+    // Show only the 10 most common crime types
+    countedData = countedData.slice(0, 10);
 
-    // const xAxis = d3.axisBottom(xScalebar);
+    // X scale: number of incidents
+    xScalebar = d3.scaleLinear()
+        .domain([0, d3.max(countedData, d => d.count) * 1.15]) // * 1.15 to leave space past longest bar
+        .range([0, width]);
 
-    // svgBar.append('g')
-    //     .attr('class', 'x-axis')
-    //     .attr('transform', `translate(0,${height})`)
-    //     .call(xAxis)
+    // Y scale: crime types
+    yScalebar = d3.scaleBand()
+        .domain(countedData.map(d => d.crimeType))
+        .range([0, height])
+        .padding(0.15);
+    
+    // Remove old bars, count labels, and axes
+    svgBar.selectAll('.bar, .bar-count').remove();
+    svgBar.selectAll('.x-axis, .y-axis, .axis').remove();
+    
+    svgBar.selectAll('.bar')
+        .data(countedData)
+        .enter()
+        .append('rect')
+        .attr('class', 'bar')
+        .attr('x', 0)
+        .attr('y', d => yScalebar(d.crimeType))
+        .attr('width', d => xScalebar(d.count))
+        .attr('height', yScalebar.bandwidth())
+        .attr('fill', 'steelblue')
+        .on('mouseover', function(event, d) {
+            d3.select(this).attr('fill', '#0056b3');
 
-    // const yAxis = d3.axisLeft(yScalebar);
+            d3.select('#tooltip')
+                .style('display', 'block')
+                .html(
+                    `<strong>${d.crimeType}</strong><br>
+                    Incidents: ${d.count.toLocaleString()}<br>
+                    Arrest Rate: ${d.arrestRate}%<br>
+                    Location: ${selected}`
+                );
+        })
+        .on('mousemove', function(event) {
+            d3.select('#tooltip')
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY + 10) + 'px');
+        })
+        .on('mouseout', function() {
+            d3.select(this).attr('fill', 'steelblue');
+            d3.select('#tooltip').style('display', 'none');
+        });
 
-    // svgBar.append('g')
-    //     .attr('class', 'y-axis')
-    //     .call(yAxis);
+
+    // Add count labels to bars
+    // Add count labels
+    svgBar.selectAll('.bar-count')
+        .data(countedData)
+        .enter()
+        .append('text')
+        .attr('class', 'bar-count')
+        .attr('x', d => xScalebar(d.count) + 5)
+        .attr('y', d => yScalebar(d.crimeType) + yScalebar.bandwidth() / 2)
+        .attr('dy', '0.35em')
+        .style('fill', 'black')
+        .style('font-size', '11px')
+        .text(d => d.count.toLocaleString());
+        
+
+    // X axis
+    svgBar.append('g')
+        .attr('class', 'x-axis')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(xScalebar)
+                .ticks(6))
+
+    // Y axis
+    svgBar.append('g')
+        .attr('class', 'y-axis')
+        .call(d3.axisLeft(yScalebar));
+    
 }
 
 function updateVisLine() {
