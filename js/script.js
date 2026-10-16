@@ -1,6 +1,11 @@
 const margin = { top: 30, right: 30, bottom: 60, left: 200 };
-const width = 800 - margin.left - margin.right;
-const height = 900 - margin.top - margin.bottom;
+const chartHeight = 450;
+const chartWidthBar = document.querySelector('#visBar').clientWidth;
+const chartWidthLine = document.querySelector('#visLine').clientWidth;
+const widthBar = chartWidthBar - margin.left - margin.right;
+const widthLine = chartWidthLine - margin.left - margin.right;
+const height = chartHeight - margin.top - margin.bottom;
+
 let allData = [];
 let options;
 let selected = 'ALL';
@@ -10,21 +15,20 @@ let brushedYears = null;
 
 const svgBar = d3.select('#visBar')
     .append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
+    .attr('width', chartWidthBar)
+    .attr('height', chartHeight + 20)
     .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`)
+    .attr('transform', `translate(${margin.left},${margin.top})`);
 
 const svgLine = d3.select('#visLine')
     .append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
+    .attr('width', chartWidthLine)
+    .attr('height', chartHeight + 20)
     .append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`)
+    .attr('transform', `translate(${margin.left},${margin.top})`);
 
 
 function init() {
-
     d3.csv("Crime_2020-2026.csv", (d) => {
         return {
             year: +d.Year,
@@ -43,7 +47,7 @@ function init() {
 
             svgBar.append('text')
                 .attr('class', 'axis-label')
-                .attr('x', width / 2)
+                .attr('x', widthBar / 2)
                 .attr('y', height + margin.bottom - 4)
                 .style('text-anchor', 'middle')
                 .text('Number of Crimes');
@@ -58,7 +62,7 @@ function init() {
 
             svgLine.append('text')
                 .attr('class', 'axis-label')
-                .attr('x', width / 2)
+                .attr('x', widthLine / 2)
                 .attr('y', height + margin.bottom - 4)
                 .style('text-anchor', 'middle')
                 .text('Year');
@@ -100,14 +104,14 @@ function setupSelector() {
     d3.select('#locationVar')
         .on('change', function () {
             selected = d3.select(this).property('value');
-            brushedYears = null; 
+            brushedYears = null;
             updateVisBar();
             updateVisLine();
         });
 }
 
-function updateVisBar() {
 
+function updateVisBar() {
     let currentData = allData;
 
     if (selected !== 'ALL') {
@@ -115,10 +119,12 @@ function updateVisBar() {
     }
 
     if (brushedYears != null) {
-        currentData = currentData.filter(d => d.period >= brushedYears[0] && d.period <= brushedYears[1])
+        currentData = currentData.filter(
+            d => d.period >= brushedYears[0] && d.period <= brushedYears[1]
+        );
     }
 
-    // count number of crime records per crime type
+    // Count number of crime records per crime type
     let countedData = [];
 
     currentData.forEach(d => {
@@ -149,8 +155,8 @@ function updateVisBar() {
 
     // X scale: number of incidents
     xScalebar = d3.scaleLinear()
-        .domain([0, d3.max(countedData, d => d.count) * 1.15]) // * 1.15 to leave space past longest bar
-        .range([0, width]);
+        .domain([0, d3.max(countedData, d => d.count) * 1.15])
+        .range([0, widthBar]);
 
     // Y scale: crime types
     yScalebar = d3.scaleBand()
@@ -194,9 +200,7 @@ function updateVisBar() {
             d3.select('#tooltip').style('display', 'none');
         });
 
-
     // Add count labels to bars
-    // Add count labels
     svgBar.selectAll('.bar-count')
         .data(countedData)
         .enter()
@@ -209,20 +213,18 @@ function updateVisBar() {
         .style('font-size', '11px')
         .text(d => d.count.toLocaleString());
 
-
     // X axis
     svgBar.append('g')
         .attr('class', 'x-axis')
         .attr('transform', `translate(0,${height})`)
-        .call(d3.axisBottom(xScalebar)
-            .ticks(6))
+        .call(d3.axisBottom(xScalebar).ticks(6));
 
     // Y axis
     svgBar.append('g')
         .attr('class', 'y-axis')
         .call(d3.axisLeft(yScalebar));
-
 }
+
 
 function updateVisLine() {
     let currentData = allData;
@@ -232,8 +234,10 @@ function updateVisLine() {
     }
 
     let countedData = [];
+
     currentData.forEach(d => {
         let there = false;
+
         for (let i = 0; i < countedData.length; i++) {
             if (countedData[i].period === d.period) {
                 countedData[i].count++;
@@ -246,15 +250,18 @@ function updateVisLine() {
             countedData.push({
                 period: d.period,
                 count: 1
-            })
+            });
         }
-    })
+    });
 
     countedData.sort((a, b) => a.period - b.period);
 
     xScaleline = d3.scaleLinear()
-        .domain([d3.min(countedData, d => d.period), d3.max(countedData, d => d.period)])
-        .range([0, width]);
+        .domain([
+            d3.min(countedData, d => d.period),
+            d3.max(countedData, d => d.period)
+        ])
+        .range([0, widthLine]);
 
     yScaleline = d3.scaleLinear()
         .domain([0, d3.max(countedData, d => d.count) * 1.4])
@@ -264,8 +271,8 @@ function updateVisLine() {
         .x(d => xScaleline(d.period))
         .y(d => yScaleline(d.count));
 
-    svgLine.selectAll('.linemade').remove()
-    svgLine.selectAll('.axis').remove()
+    svgLine.selectAll('.linemade').remove();
+    svgLine.selectAll('.axis').remove();
 
     svgLine.append('path')
         .attr('d', line(countedData))
@@ -276,15 +283,16 @@ function updateVisLine() {
 
     const xAxis = d3.axisBottom(xScaleline)
         .tickValues(countedData.map(d => d.period))
-        .tickFormat(d => { 
-            let y = 2020 + Math.floor(d/4)
-            let q = (d % 4) + 1
-            if(q == 1) { 
-                return `${y} Q${q}`
+        .tickFormat(d => {
+            let y = 2020 + Math.floor(d / 4);
+            let q = (d % 4) + 1;
+
+            if (q == 1) {
+                return `${y} Q${q}`;
             }
-            return `Q${q}`
-        })
-        
+
+            return `Q${q}`;
+        });
 
     const yAxis = d3.axisLeft(yScaleline);
 
@@ -296,33 +304,37 @@ function updateVisLine() {
         .attr('transform', 'rotate(-45)')
         .style('text-anchor', 'end')
         .attr('dy', '.35em')
-        .attr('dx', '-0.5em')
+        .attr('dx', '-0.5em');
 
     svgLine.append('g')
         .attr('class', 'axis')
         .call(yAxis);
 
     const brush = d3.brushX()
-        .extent([[0, 0], [width, height]])
+        .extent([[0, 0], [widthLine, height]])
         .on('brush', brushed)
-        .on('end', brushend)
+        .on('end', brushend);
 
-    svgLine.selectAll('.brushed').remove()
+    svgLine.selectAll('.brushed').remove();
 
-    const gb = svgLine.append("g")
+    svgLine.append('g')
         .attr('class', 'brushed')
-        .call(brush)
+        .call(brush);
 
     function brushed({ selection }) {
         if (selection) {
-            brushedYears = [Math.round(xScaleline.invert(selection[0])), Math.round(xScaleline.invert(selection[1]))]; 
+            brushedYears = [
+                Math.round(xScaleline.invert(selection[0])),
+                Math.round(xScaleline.invert(selection[1]))
+            ];
         }
     }
 
     function brushend({ selection }) {
         if (!selection) {
-            brushedYears = null; 
+            brushedYears = null;
         }
+
         updateVisBar();
     }
 }
