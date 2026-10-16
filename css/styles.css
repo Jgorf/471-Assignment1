@@ -66,6 +66,10 @@ h1 {
     justify-content: center;
 }
 
+#visBar { 
+    padding-left: 12rem;
+}
+
 #visBar,
 #visLine {
     flex: 1;
@@ -75,6 +79,7 @@ h1 {
 #visLine h2 {
     text-align: center;
     font-size: 18px;
+    padding-top: 2rem; 
 }
 
 #tooltip {

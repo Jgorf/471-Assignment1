@@ -1,8 +1,8 @@
-const margin = { top: 80, right: 60, bottom: 60, left: 200 };
+const margin = { top: 30, right: 30, bottom: 60, left: 200 };
 const width = 800 - margin.left - margin.right;
 const height = 900 - margin.top - margin.bottom;
 let allData = [];
-let options = ['ALL', 'STREET', 'APARTMENT', 'ALLEY'];
+let options;
 let selected = 'ALL';
 let xScalebar, yScalebar;
 let xScaleline, yScaleline;
@@ -45,7 +45,7 @@ function init() {
                 .attr('x', width / 2)
                 .attr('y', height + margin.bottom - 4)
                 .style('text-anchor', 'middle')
-                .text('Number of crimes');
+                .text('Number of Crimes');
 
             svgBar.append('text')
                 .attr('class', 'axis-label')
@@ -66,7 +66,7 @@ function init() {
                 .attr('class', 'axis-label')
                 .attr('transform', 'rotate(-90)')
                 .attr('x', -height / 2)
-                .attr('y', -margin.left + 15)
+                .attr('y', -margin.left + 100)
                 .style('text-anchor', 'middle')
                 .text('Number of Crimes');
 
@@ -243,6 +243,8 @@ function updateVisLine() {
             })
         }
     })
+
+    countedData.sort((a, b) => a.year - b.year);
 
     xScaleline = d3.scaleLinear()
         .domain([d3.min(countedData, d => d.year), d3.max(countedData, d => d.year)])
